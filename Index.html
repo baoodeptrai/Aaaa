@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nhiệm vụ</title>
+<style>
+• { box-sizing: border-box; }
+body {
+margin: 0; padding: 24px 16px 60px;
+font-family: system-ui, -apple-system, sans-serif;
+background: #f5f5f7; color: #1d1d1f;
+max-width: 520px; margin-inline: auto;
+}
+header { text-align: center; margin-bottom: 28px; }
+.points {
+font-size: 64px; font-weight: 800; line-height: 1;
+background: linear-gradient(135deg,#0071e3,#34c759);
+-webkit-background-clip: text; background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.label { font-size: 12px; color: #86868b; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+.sub { font-size: 13px; color: #86868b; margin-top: 10px; }
+
+.row { display: flex; gap: 8px; margin-bottom: 20px; }
+input {
+flex: 1; padding: 14px 16px; font-size: 16px;
+border: 1px solid #d2d2d7; border-radius: 12px;
+background: #fff; outline: none; font-family: inherit;
+}
+input:focus { border-color: #0071e3; }
+button.add {
+padding: 0 20px; font-size: 16px; font-weight: 600;
+border: none; border-radius: 12px; background: #0071e3; color: #fff;
+cursor: pointer; font-family: inherit;
+}
+button.add:active { opacity: .7; }
+
+ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.task {
+display: flex; align-items: center; gap: 12px;
+background: #fff; padding: 12px 14px; border-radius: 12px;
+box-shadow: 0 1px 2px rgba(0,0,0,.06);
+transition: opacity .15s;
+}
+.check {
+width: 26px; height: 26px; flex: none;
+border-radius: 50%; border: 2px solid #d2d2d7;
+background: #fff; cursor: pointer; padding: 0;
+display: grid; place-items: center;
+transition: all .15s;
+}
+.check:hover { border-color: #34c759; background: #f0fdf4; }
+.check:active { transform: scale(.9); }
+.text { flex: 1; font-size: 16px; word-break: break-word; }
+.del {
+border: none; background: none; color: #c7c7cc;
+font-size: 22px; cursor: pointer; line-height: 1; padding: 4px;
+}
+.del:hover { color: #ff3b30; }
+
+.empty { text-align: center; color: #86868b; font-size: 15px; padding: 30px 0; }
+
+.section-title {
+font-size: 12px; color: #86868b; letter-spacing: 1.5px;
+text-transform: uppercase; margin: 36px 0 12px 4px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.section-title .count {
+font-size: 12px; background: #e8e8ed; color: #1d1d1f;
+padding: 2px 8px; border-radius: 10px; letter-spacing: 0; font-weight: 600;
+}
+
+.history-item {
+display: flex; align-items: center; gap: 12px;
+padding: 11px 14px; border-radius: 12px;
+background: #fafafa; border: 1px solid #ebebf0;
+font-size: 15px;
+}
+.history-item .dot {
+width: 20px; height: 20px; flex: none; border-radius: 50%;
+background: #34c759; color: #fff; font-size: 12px; font-weight: 700;
+display: grid; place-items: center;
+}
+.history-item .htext { flex: 1; color: #6e6e73; word-break: break-word; }
+.history-item .time { font-size: 12px; color: #a1a1a6; flex: none; }
+
+.reset {
+display: block; margin: 40px auto 0; border: none; background: none;
+color: #c7c7cc; font-size: 12px; cursor: pointer; text-decoration: underline;
+font-family: inherit;
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="points" id="points">0</div>
+<div class="label">điểm</div>
+<div class="sub" id="sub">Chưa làm gì cả</div>
+</header>
+
+<div class="row">
+<input id="input" placeholder="Viết 1 nhiệm vụ nhỏ..." maxlength="120" autocomplete="off">
+<button class="add" id="addBtn">Thêm</button>
+</div>
+
+<ul id="list"></ul>
+
+<div class="section-title" id="histTitle" style="display:none">
+<span>Lịch sử</span>
+<span class="count" id="histCount">0</span>
+</div>
+<ul id="history"></ul>
+
+<button class="reset" id="resetBtn">Xoá tất cả</button>
+
+<script>
+const KEY = 'nhiemvu_v2';
+
+let state = JSON.parse(localStorage.getItem(KEY) || 'null') || {
+tasks: [], history: [], points: 0
+};
+
+const ('list'), historyList = ('input');
+const pointsEl = ('sub');
+
+const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+function fmtTime(ts) {
+const d = new Date(ts);
+const now = new Date();
+const hm = d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+if (d.toDateString() === now.toDateString()) return hm;
+return d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' }) + ' · ' + hm;
+}
+
+function render() {
+pointsEl.textContent = state.points;
+
+// Subtitle
+const done = state.history.length;
+subEl.textContent = done === 0
+? 'Chưa làm gì cả'
+: Đã xong ${done} nhiệm vụ`;
+
+// Pending tasks
+list.innerHTML = '';
+if (!state.tasks.length) {
+list.innerHTML = '<p class="empty">Chưa có nhiệm vụ nào. Thêm 1 cái đi 👇</p>';
+} else {
+state.tasks.forEach(t => {
+const li = document.createElement('li');
+li.className = 'task';
+
+const check = document.createElement('button');
+check.className = 'check';
+check.title = 'Hoàn thành (+1 điểm)';
+check.onclick = () => complete(t.id);
+
+const text = document.createElement('span');
+text.className = 'text';
+text.textContent = t.text;
+
+const del = document.createElement('button');
+del.className = 'del';
+del.textContent = '×';
+del.title = 'Xoá nhiệm vụ';
+del.onclick = () => {
+state.tasks = state.tasks.filter(x => x.id !== t.id);
+save(); render();
+};
+
+li.append(check, text, del);
+list.appendChild(li);
+});
+}
+
+// History
+historyList.innerHTML = '';
+const hist = [...state.history].reverse(); // mới nhất lên đầu
+$('histTitle').style.display = hist.length ? 'flex' : 'none'; $('histCount').textContent = hist.length;
+
+hist.forEach(h => {
+const li = document.createElement('li');
+li.className = 'history-item';
+li.innerHTML = &lt;span class="dot"&gt;✓&lt;/span&gt; &lt;span class="htext"&gt;&lt;/span&gt; &lt;span class="time"&gt;${fmtTime(h.at)}</span>
+`;
+li.querySelector('.htext').textContent = h.text;
+historyList.appendChild(li);
+});
+}
+
+function complete(id) {
+const t = state.tasks.find(x => x.id === id);
+if (!t) return;
+
+// +1 điểm, không bao giờ giảm
+state.points += 1;
+
+// Chuyển sang lịch sử
+state.history.push({ id: t.id, text: t.text, at: Date.now() });
+state.tasks = state.tasks.filter(x => x.id !== id);
+
+save(); render();
+}
+
+function addTask() {
+const text = input.value.trim();
+if (!text) return;
+state.tasks.unshift({ id: Date.now() + Math.random(), text });
+input.value = '';
+save(); render(); input.focus();
+}
+
+$`('addBtn').onclick = addTask;
+input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+`$('resetBtn').onclick = () => {
+if (confirm('Xoá hết nhiệm vụ, lịch sử VÀ điểm? Không hoàn tác được.')) {
+state = { tasks: [], history: [], points: 0 };
+save(); render();
+}
+};
+
+render();
+</script>
+</body>
+</html>
