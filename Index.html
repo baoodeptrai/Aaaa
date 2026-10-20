@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nhiệm vụ</title>
 <style>
-• { box-sizing: border-box; }
+* { box-sizing: border-box; }
 body {
 margin: 0; padding: 24px 16px 60px;
 font-family: system-ui, -apple-system, sans-serif;
@@ -123,8 +123,11 @@ let state = JSON.parse(localStorage.getItem(KEY) || 'null') || {
 tasks: [], history: [], points: 0
 };
 
-const ('list'), historyList = ('input');
-const pointsEl = ('sub');
+const list = document.getElementById('list');
+const historyList = document.getElementById('history');
+const input = document.getElementById('input');
+const pointsEl = document.getElementById('points');
+const subEl = document.getElementById('sub');
 
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
 
@@ -143,7 +146,7 @@ pointsEl.textContent = state.points;
 const done = state.history.length;
 subEl.textContent = done === 0
 ? 'Chưa làm gì cả'
-: Đã xong ${done} nhiệm vụ`;
+: `Đã xong ${done} nhiệm vụ`;
 
 // Pending tasks
 list.innerHTML = '';
@@ -180,13 +183,13 @@ list.appendChild(li);
 // History
 historyList.innerHTML = '';
 const hist = [...state.history].reverse(); // mới nhất lên đầu
-$('histTitle').style.display = hist.length ? 'flex' : 'none'; $('histCount').textContent = hist.length;
+document.getElementById('histTitle').style.display = hist.length ? 'flex' : 'none'; 
+document.getElementById('histCount').textContent = hist.length;
 
 hist.forEach(h => {
 const li = document.createElement('li');
 li.className = 'history-item';
-li.innerHTML = &lt;span class="dot"&gt;✓&lt;/span&gt; &lt;span class="htext"&gt;&lt;/span&gt; &lt;span class="time"&gt;${fmtTime(h.at)}</span>
-`;
+li.innerHTML = `<span class="dot">✓</span> <span class="htext"></span> <span class="time">${fmtTime(h.at)}</span>`;
 li.querySelector('.htext').textContent = h.text;
 historyList.appendChild(li);
 });
@@ -196,7 +199,7 @@ function complete(id) {
 const t = state.tasks.find(x => x.id === id);
 if (!t) return;
 
-// +1 điểm, không bao giờ giảm
+// +1 điểm
 state.points += 1;
 
 // Chuyển sang lịch sử
@@ -214,10 +217,10 @@ input.value = '';
 save(); render(); input.focus();
 }
 
-$`('addBtn').onclick = addTask;
+document.getElementById('addBtn').onclick = addTask;
 input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
 
-`$('resetBtn').onclick = () => {
+document.getElementById('resetBtn').onclick = () => {
 if (confirm('Xoá hết nhiệm vụ, lịch sử VÀ điểm? Không hoàn tác được.')) {
 state = { tasks: [], history: [], points: 0 };
 save(); render();
